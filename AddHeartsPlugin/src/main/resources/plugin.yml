@@ -1,0 +1,11 @@
+name: AddHearts
+version: '${project.version}'
+main: com.gh05typlayz.AddHearts.Main
+api-version: 1.19
+author: GH05TYPLAYz
+description: Add more hearts, etc.
+website: https://gh05typlayz.com/
+
+commands:
+  addhearts:
+    usage: /<command>
