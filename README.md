@@ -8,7 +8,7 @@ There is NO config file, everything is setup with commands.<br>
 <br>
 There are custom permissions needed to use the commands but OPs can use it anyways
 
-# Commands:
+# Commands
 /addhearts help - This is the Help Command (Shows all Commands)<br>
 /addhearts heal - Heals Yourself<br>
 /addhearts heal <Player> - Heals Player<br>
@@ -18,7 +18,7 @@ There are custom permissions needed to use the commands but OPs can use it anywa
 /addhearts default <Number Of Hearts> - This Changes the default amount of Hearts For New Player Join With.<br>
 /addhearts setall <Number Of Hearts> - Sets All Online And Offline Player's Hearts to This Value
 
-# Permissions:
+# Permissions
 addhearts.heal<br>
 addhearts.add<br>
 addhearts.subtract<br>
