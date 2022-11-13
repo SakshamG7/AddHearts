@@ -12,6 +12,7 @@ import java.util.List;
 
 public class Main extends JavaPlugin {
     public double defaultHealth = 20;
+    public double setHealth = defaultHealth;
     @Override
     public void onEnable() { Bukkit.getLogger().info("[AddHearts] Has Started."); }
 
@@ -123,9 +124,16 @@ public class Main extends JavaPlugin {
                     } else if (args[0].equalsIgnoreCase("default") && player.hasPermission("addhearts.default")) {
                         if (args.length == 2) {
                             defaultHealth = Double.parseDouble(args[1]);
-                            player.sendMessage("Default Health For New Players Has Been Set To " + defaultHealth + "!");
+                            player.sendMessage("Default Health For All Players Has Been Set To " + defaultHealth + "!");
                         } else {
                             player.performCommand("addhearts help");
+                        }
+                    } else if (args[0].equalsIgnoreCase("setall") && player.hasPermission("addhearts.setall")) {
+                        if (args.length == 2) {
+                            setHealth = Double.parseDouble(args[1]);
+                            getServer().getLogger().info("Default Health For New Players Has Been Set To " + setHealth + "!");
+                        } else {
+                            getServer().dispatchCommand(sender, "addhearts help");
                         }
                     }
                 }
@@ -219,7 +227,14 @@ public class Main extends JavaPlugin {
                     } else if (args[0].equalsIgnoreCase("default")) {
                         if (args.length == 2) {
                             defaultHealth = Double.parseDouble(args[1]);
-                            getServer().getLogger().info("Default Health For New Players Has Been Set To " + defaultHealth + "!");
+                            getServer().getLogger().info("Default Health For All Players Has Been Set To " + defaultHealth + "!");
+                        } else {
+                            getServer().dispatchCommand(sender, "addhearts help");
+                        }
+                    } else if (args[0].equalsIgnoreCase("setall")) {
+                        if (args.length == 2) {
+                            setHealth = Double.parseDouble(args[1]);
+                            getServer().getLogger().info("Default Health For New Players Has Been Set To " + setHealth + "!");
                         } else {
                             getServer().dispatchCommand(sender, "addhearts help");
                         }

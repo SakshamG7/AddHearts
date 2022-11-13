@@ -13,6 +13,8 @@ public class PlayerJoin implements Listener {
         Player player = e.getPlayer();
         if (player.hasPlayedBefore()) {
             player.setMaxHealth(v.defaultHealth);
+        } else {
+            player.setMaxHealth(v.setHealth);
         }
     }
 }
