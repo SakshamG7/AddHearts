@@ -20,9 +20,16 @@ public class Main extends JavaPlugin implements Listener {
 
     @Override
     public void onEnable() {
-        Bukkit.getLogger().info("[AddHearts] Has Started.");
         getServer().getPluginManager().registerEvents(this, this);
         this.saveDefaultConfig();
+        Bukkit.getLogger().info("[AddHearts] Has Started.");
+        new UpdateChecker(this, 100878).getLatestVerision(version -> {
+            if (this.getDescription().getVersion().equalsIgnoreCase(version)) {
+                getLogger().info("Plugin is up to date.");
+            } else {
+                getLogger().warning("Plugin is not up to date.");
+            }
+        });
     }
 
 
@@ -34,6 +41,17 @@ public class Main extends JavaPlugin implements Listener {
     @EventHandler
     public void onPlayerJoin(PlayerJoinEvent e) {
         Player player = e.getPlayer();
+
+        if (player.isOp()) {
+            new UpdateChecker(this, 100878).getLatestVerision(version -> {
+                if (this.getDescription().getVersion().equalsIgnoreCase(version)) {
+                    player.sendMessage("[AddHearts] Plugin is up to date.");
+                } else {
+                    player.sendMessage("[AddHearts] Plugin is not up to date.");
+                }
+            });
+        }
+
         if (player.hasPlayedBefore()) {
             if (!config.contains("players." + player.getUniqueId())) {
                 config.set("players." + player.getUniqueId() + ".hearts", player.getMaxHealth());

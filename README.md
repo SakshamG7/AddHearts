@@ -4,7 +4,7 @@ The Main feature of this plugin is adding hearts to players.<br>
 You can even remove hearts from players.<br>
 You can set a fixed amount of hearts to the player.<br>
 <br>
-There is a config file.<br>
+There is NO config file, everything is setup with commands.<br>
 <br>
 There are custom permissions needed to use the commands but OPs can use it anyways
 
