@@ -1,22 +1,51 @@
 package com.gh05typlayz.AddHearts;
 
 import org.bukkit.Bukkit;
+import org.bukkit.OfflinePlayer;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
+import org.bukkit.event.EventHandler;
+import org.bukkit.event.Listener;
+import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.bukkit.configuration.file.FileConfiguration;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-public class Main extends JavaPlugin {
-    public double defaultHealth = 20;
-    @Override
-    public void onEnable() { Bukkit.getLogger().info("[AddHearts] Has Started."); }
+public class Main extends JavaPlugin implements Listener {
+    FileConfiguration config = this.getConfig();
 
     @Override
-    public void onDisable() { Bukkit.getLogger().info("[AddHearts] Has Stopped."); }
+    public void onEnable() {
+        Bukkit.getLogger().info("[AddHearts] Has Started.");
+        getServer().getPluginManager().registerEvents(this, this);
+        this.saveDefaultConfig();
+    }
+
+
+    @Override
+    public void onDisable() {
+        Bukkit.getLogger().info("[AddHearts] Has Stopped.");
+    }
+
+    @EventHandler
+    public void onPlayerJoin(PlayerJoinEvent e) {
+        Player player = e.getPlayer();
+        if (player.hasPlayedBefore()) {
+            if (!config.contains("players." + player.getUniqueId())) {
+                config.set("players." + player.getUniqueId() + ".hearts", player.getMaxHealth());
+                this.saveConfig();
+            }
+            player.setMaxHealth(config.getDouble("players." + player.getUniqueId() + ".hearts"));
+        } else {
+            config.set("players." + player.getUniqueId() + ".hearts", config.get("defaultHealth"));
+            this.saveConfig();
+            player.setMaxHealth(config.getDouble("defaultHealth"));
+        }
+    }
 
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
@@ -26,7 +55,7 @@ public class Main extends JavaPlugin {
                 if (args.length >= 1) {
                     if (args[0].equalsIgnoreCase("help")) {
                         player.sendMessage(
-                                        "/addhearts help - This is the Help Command. (Shows all Commands)\n" +
+                                "/addhearts help - This is the Help Command. (Shows all Commands)\n" +
                                         "/addhearts heal - Heals Yourself.\n" +
                                         "/addhearts heal <Player> - Heals Player.\n" +
                                         "/addhearts add <Number Of Hearts> <Player> - Adds Hearts To Given Player.\n" +
@@ -37,23 +66,26 @@ public class Main extends JavaPlugin {
                         );
                     } else if (args[0].equalsIgnoreCase("add") && player.hasPermission("addhearts.add")) {
                         if (args.length == 2) {
-                            double oldHealth = player.getHealth();
+                            double oldHealth = player.getMaxHealth();
                             double addedHealth = Double.parseDouble(args[1]);
                             double newHealth = Double.sum(oldHealth, addedHealth);
+                            config.set("players." + player.getUniqueId() + ".hearts", newHealth);
+                            this.saveConfig();
                             player.setMaxHealth(newHealth);
-                            player.sendMessage("You now have " + newHealth/2 + " hearts!");
+                            player.sendMessage("You now have " + newHealth / 2 + " hearts!");
                         } else if (args.length == 3) {
                             Player p = Bukkit.getPlayer(args[2]);
-                            assert p != null;
-                            double oldHealth = p.getHealth();
-                            double addedHealth = Double.parseDouble(args[1]);
-                            double newHealth = Double.sum(oldHealth, addedHealth);
-                            if (p.isOnline()) {
+                            if (p != null) {
+                                double oldHealth = p.getMaxHealth();
+                                double addedHealth = Double.parseDouble(args[1]);
+                                double newHealth = Double.sum(oldHealth, addedHealth);
+                                config.set("players." + p.getUniqueId() + ".hearts", newHealth);
+                                this.saveConfig();
                                 p.setMaxHealth(newHealth);
-                                p.sendMessage("You now have " + newHealth/2 + " hearts!");
-                                player.sendMessage(args[2] + " now has " + newHealth/2 + " hearts!");
+                                p.sendMessage("You now have " + newHealth / 2 + " hearts!");
+                                player.sendMessage(args[2] + " now has " + newHealth / 2 + " hearts!");
                             } else {
-                                player.sendMessage( args[2] + " is Offline.");
+                                player.sendMessage(args[2] + " is Offline.");
                             }
                         } else {
                             player.performCommand("addhearts help");
@@ -63,19 +95,23 @@ public class Main extends JavaPlugin {
                             double oldHealth = player.getHealth();
                             double addedHealth = Double.parseDouble(args[1]);
                             double newHealth = Double.sum(oldHealth, -addedHealth);
+                            config.set("players." + player.getUniqueId() + ".hearts", newHealth);
+                            this.saveConfig();
                             player.setMaxHealth(newHealth);
-                            player.sendMessage("You now have " + newHealth/2 + " hearts!");
+                            player.sendMessage("You now have " + newHealth / 2 + " hearts!");
                         } else if (args.length == 3) {
                             Player p = Bukkit.getPlayer(args[2]);
-                            double oldHealth = p.getHealth();
-                            double addedHealth = Double.parseDouble(args[1]);
-                            double newHealth = Double.sum(oldHealth, -addedHealth);
-                            if (p.isOnline()) {
+                            if (p != null) {
+                                double oldHealth = p.getMaxHealth();
+                                double addedHealth = Double.parseDouble(args[1]);
+                                double newHealth = Double.sum(oldHealth, -addedHealth);
+                                config.set("players." + p.getUniqueId() + ".hearts", newHealth);
+                                this.saveConfig();
                                 p.setMaxHealth(newHealth);
-                                p.sendMessage("You now have " + newHealth/2 + " hearts!");
-                                player.sendMessage(args[2] + " now has " + newHealth/2 + " hearts!");
+                                p.sendMessage("You now have " + newHealth / 2 + " hearts!");
+                                player.sendMessage(args[2] + " now has " + newHealth / 2 + " hearts!");
                             } else {
-                                player.sendMessage( args[2] + " is Offline.");
+                                player.sendMessage(args[2] + " is Offline.");
                             }
                         } else {
                             player.performCommand("addhearts help");
@@ -83,17 +119,21 @@ public class Main extends JavaPlugin {
                     } else if (args[0].equalsIgnoreCase("set") && player.hasPermission("addhearts.set")) {
                         if (args.length == 2) {
                             double newHealth = Double.parseDouble(args[1]);
+                            config.set("players." + player.getUniqueId() + ".hearts", newHealth);
+                            this.saveConfig();
                             player.setMaxHealth(newHealth);
-                            player.sendMessage("You now have " + newHealth/2 + " hearts!");
+                            player.sendMessage("You now have " + newHealth / 2 + " hearts!");
                         } else if (args.length == 3) {
                             double newHealth = Double.parseDouble(args[1]);
                             Player p = Bukkit.getPlayer(args[2]);
-                            if (p.isOnline()) {
+                            if (p != null) {
+                                config.set("players." + p.getUniqueId() + ".hearts", newHealth);
+                                this.saveConfig();
                                 p.setMaxHealth(newHealth);
-                                p.sendMessage("You now have " + newHealth/2 + " hearts!");
-                                player.sendMessage(args[2] + " now has " + newHealth/2 + " hearts!");
+                                p.sendMessage("You now have " + newHealth / 2 + " hearts!");
+                                player.sendMessage(args[2] + " now has " + newHealth / 2 + " hearts!");
                             } else {
-                                player.sendMessage( args[2] + " is Offline.");
+                                player.sendMessage(args[2] + " is Offline.");
                             }
                         } else {
                             player.performCommand("addhearts help");
@@ -107,7 +147,7 @@ public class Main extends JavaPlugin {
                             player.sendMessage("You have been healed!");
                         } else if (args.length == 2) {
                             Player p = Bukkit.getPlayer(args[2]);
-                            if (p.isOnline()) {
+                            if (p != null) {
                                 p.setHealth(p.getMaxHealth());
                                 p.setSaturation(20);
                                 p.setFoodLevel(20);
@@ -115,17 +155,36 @@ public class Main extends JavaPlugin {
                                 p.sendMessage("You have been healed!");
                                 player.sendMessage(args[2] + " has been healed!");
                             } else {
-                                player.sendMessage( args[2] + " is Offline.");
+                                player.sendMessage(args[2] + " is Offline.");
                             }
                         } else {
                             player.performCommand("addhearts help");
                         }
                     } else if (args[0].equalsIgnoreCase("default") && player.hasPermission("addhearts.default")) {
                         if (args.length == 2) {
-                            defaultHealth = Double.parseDouble(args[1]);
-                            player.sendMessage("Default Health For New Players Has Been Set To " + defaultHealth + "!");
+                            double defaultHealth = Double.parseDouble(args[1]);
+                            config.set("defaultHealth", defaultHealth);
+                            this.saveConfig();
+                            getServer().getLogger().info("Default Health For New Players Has Been Set To " + defaultHealth + "!");
                         } else {
-                            player.performCommand("addhearts help");
+                            getServer().dispatchCommand(sender, "addhearts help");
+                        }
+                    } else if (args[0].equalsIgnoreCase("setall") && player.hasPermission("addhearts.setall")) {
+                        if (args.length == 2) {
+                            double setHealth = Double.parseDouble(args[1]);
+                            Player[] online = (Player[]) getServer().getOnlinePlayers().toArray();
+                            Player[] offline = (Player[]) getServer().getOnlinePlayers().toArray();
+                            for (int i = 0; i < online.length; i++) {
+                                config.set("players." + online[i].getUniqueId() + ".hearts", setHealth);
+                                online[i].setMaxHealth(setHealth);
+                                this.saveConfig();
+                            }
+                            for (int i = 0; i < offline.length; i++) {
+                                config.set("players." + offline[i].getUniqueId() + ".hearts", setHealth);
+                                this.saveConfig();
+                            }
+                        } else {
+                            getServer().dispatchCommand(sender, "addhearts help");
                         }
                     }
                 }
@@ -150,15 +209,17 @@ public class Main extends JavaPlugin {
                             getServer().getLogger().warning("You have to add a player's name.");
                         } else if (args.length == 3) {
                             Player p = Bukkit.getPlayer(args[2]);
-                            double oldHealth = p.getHealth();
-                            double addedHealth = Double.parseDouble(args[1]);
-                            double newHealth = Double.sum(oldHealth, addedHealth);
-                            if (p.isOnline()) {
+                            if (p != null) {
+                                double oldHealth = p.getMaxHealth();
+                                double addedHealth = Double.parseDouble(args[1]);
+                                double newHealth = Double.sum(oldHealth, addedHealth);
+                                config.set("players." + p.getUniqueId() + ".hearts", newHealth);
+                                this.saveConfig();
                                 p.setMaxHealth(newHealth);
-                                p.sendMessage("You now have " + newHealth/2 + " hearts!");
-                                getServer().getLogger().info(args[2] + " now has " + newHealth/2 + " hearts!");
+                                p.sendMessage("You now have " + newHealth / 2 + " hearts!");
+                                getServer().getLogger().info(args[2] + " now has " + newHealth / 2 + " hearts!");
                             } else {
-                                getServer().getLogger().warning( args[2] + " is Offline.");
+                                getServer().getLogger().warning(args[2] + " is Offline.");
                             }
                         } else {
                             getServer().dispatchCommand(sender, "addhearts help");
@@ -168,16 +229,18 @@ public class Main extends JavaPlugin {
                             getServer().getLogger().warning("You have to add a player's name.");
                         } else if (args.length == 3) {
                             Player p = Bukkit.getPlayer(args[2]);
-                            assert p != null;
-                            double oldHealth = p.getHealth();
-                            double addedHealth = Double.parseDouble(args[1]);
-                            double newHealth = Double.sum(oldHealth, -addedHealth);
-                            if (p.isOnline()) {
+                            if (p != null) {
+                                double oldHealth = p.getMaxHealth();
+                                ;
+                                double addedHealth = Double.parseDouble(args[1]);
+                                double newHealth = Double.sum(oldHealth, -addedHealth);
+                                config.set("players." + p.getUniqueId() + ".hearts", newHealth);
+                                this.saveConfig();
                                 p.setMaxHealth(newHealth);
-                                p.sendMessage("You now have " + newHealth/2 + " hearts!");
-                                getServer().getLogger().info(args[2] + " now has " + newHealth/2 + " hearts!");
+                                p.sendMessage("You now have " + newHealth / 2 + " hearts!");
+                                getServer().getLogger().info(args[2] + " now has " + newHealth / 2 + " hearts!");
                             } else {
-                                getServer().getLogger().warning( args[2] + " is Offline.");
+                                getServer().getLogger().warning(args[2] + " is Offline.");
                             }
                         } else {
                             getServer().dispatchCommand(sender, "addhearts help");
@@ -188,12 +251,19 @@ public class Main extends JavaPlugin {
                         } else if (args.length == 3) {
                             double newHealth = Double.parseDouble(args[1]);
                             Player p = Bukkit.getPlayer(args[2]);
-                            if (p.isOnline()) {
+                            if (p != null) {
+                                config.set("players." + p.getUniqueId() + ".hearts", newHealth);
+                                this.saveConfig();
                                 p.setMaxHealth(newHealth);
-                                p.sendMessage("You now have " + newHealth/2 + " hearts!");
-                                getServer().getLogger().info(args[2] + " now has " + newHealth/2 + " hearts!");
+                                p.sendMessage("You now have " + newHealth / 2 + " hearts!");
+                                getServer().getLogger().info(args[2] + " now has " + newHealth / 2 + " hearts!");
+                            } else if (Bukkit.getOfflinePlayer(args[2]).hasPlayedBefore()) {
+                                OfflinePlayer oP = Bukkit.getOfflinePlayer(args[2]);
+                                config.set("players." + oP.getUniqueId() + ".hearts", newHealth);
+                                this.saveConfig();
+                                getServer().getLogger().info(args[2] + " is Offline.\nThe heart count is saved in the config file.");
                             } else {
-                                getServer().getLogger().info(args[2] + " is Offline.");
+                                getServer().getLogger().warning(args[2] + " cannot be found.");
                             }
                         } else {
                             getServer().dispatchCommand(sender, "addhearts help");
@@ -203,7 +273,7 @@ public class Main extends JavaPlugin {
                             getServer().getLogger().warning("You have to add a player's name.");
                         } else if (args.length == 3) {
                             Player p = Bukkit.getPlayer(args[2]);
-                            if (p.isOnline()) {
+                            if (p != null) {
                                 p.setHealth(p.getMaxHealth());
                                 p.setSaturation(20);
                                 p.setFoodLevel(20);
@@ -211,15 +281,36 @@ public class Main extends JavaPlugin {
                                 p.sendMessage("You have been healed!");
                                 getServer().getLogger().info(args[2] + " has been healed!");
                             } else {
-                                getServer().getLogger().warning( args[2] + " is Offline.");
+                                getServer().getLogger().warning(args[2] + " is Offline.");
                             }
                         } else {
                             getServer().dispatchCommand(sender, "addhearts help");
                         }
                     } else if (args[0].equalsIgnoreCase("default")) {
                         if (args.length == 2) {
-                            defaultHealth = Double.parseDouble(args[1]);
+                            double defaultHealth = Double.parseDouble(args[1]);
+                            config.set("defaultHealth", defaultHealth);
+                            this.saveConfig();
                             getServer().getLogger().info("Default Health For New Players Has Been Set To " + defaultHealth + "!");
+                        } else {
+                            getServer().dispatchCommand(sender, "addhearts help");
+                        }
+                    } else if (args[0].equalsIgnoreCase("setall")) {
+                        if (args.length == 2) {
+                            double setHealth = Double.parseDouble(args[1]);
+                            Object[] online = getServer().getOnlinePlayers().toArray();
+                            Object[] offline = getServer().getOnlinePlayers().toArray();
+                            for (int i = 0; i < online.length; i++) {
+                                Player p = (Player) online[i];
+                                config.set("players." + p.getUniqueId() + ".hearts", setHealth);
+                                p.setMaxHealth(setHealth);
+                                this.saveConfig();
+                            }
+                            for (int i = 0; i < offline.length; i++) {
+                                Player p = (Player) offline[i];
+                                config.set("players." + p.getUniqueId() + ".hearts", setHealth);
+                                this.saveConfig();
+                            }
                         } else {
                             getServer().dispatchCommand(sender, "addhearts help");
                         }
