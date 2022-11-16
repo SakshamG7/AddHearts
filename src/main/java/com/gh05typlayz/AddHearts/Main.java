@@ -191,14 +191,14 @@ public class Main extends JavaPlugin implements Listener {
                         if (args.length == 2) {
                             double setHealth = Double.parseDouble(args[1]);
                             Player[] online = (Player[]) getServer().getOnlinePlayers().toArray();
-                            Player[] offline = (Player[]) getServer().getOnlinePlayers().toArray();
-                            for (int i = 0; i < online.length; i++) {
-                                config.set("players." + online[i].getUniqueId() + ".hearts", setHealth);
-                                online[i].setMaxHealth(setHealth);
+                            OfflinePlayer[] offline = (OfflinePlayer[]) getServer().getOnlinePlayers().toArray();
+                            for (Player p : online) {
+                                config.set("players." + p.getUniqueId() + ".hearts", setHealth);
+                                p.setMaxHealth(setHealth);
                                 this.saveConfig();
                             }
-                            for (int i = 0; i < offline.length; i++) {
-                                config.set("players." + offline[i].getUniqueId() + ".hearts", setHealth);
+                            for (OfflinePlayer p : offline) {
+                                config.set("players." + p.getUniqueId() + ".hearts", setHealth);
                                 this.saveConfig();
                             }
                         } else {
@@ -316,16 +316,14 @@ public class Main extends JavaPlugin implements Listener {
                     } else if (args[0].equalsIgnoreCase("setall")) {
                         if (args.length == 2) {
                             double setHealth = Double.parseDouble(args[1]);
-                            Object[] online = getServer().getOnlinePlayers().toArray();
-                            Object[] offline = getServer().getOnlinePlayers().toArray();
-                            for (int i = 0; i < online.length; i++) {
-                                Player p = (Player) online[i];
+                            Player[] online = (Player[]) getServer().getOnlinePlayers().toArray();
+                            OfflinePlayer[] offline = (OfflinePlayer[]) getServer().getOnlinePlayers().toArray();
+                            for (Player p : online) {
                                 config.set("players." + p.getUniqueId() + ".hearts", setHealth);
                                 p.setMaxHealth(setHealth);
                                 this.saveConfig();
                             }
-                            for (int i = 0; i < offline.length; i++) {
-                                Player p = (Player) offline[i];
+                            for (OfflinePlayer p : offline) {
                                 config.set("players." + p.getUniqueId() + ".hearts", setHealth);
                                 this.saveConfig();
                             }
