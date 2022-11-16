@@ -14,6 +14,7 @@ import org.bukkit.configuration.file.FileConfiguration;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.lang.Runtime.Version;
 
 public class Main extends JavaPlugin implements Listener {
     FileConfiguration config = this.getConfig();
@@ -22,9 +23,13 @@ public class Main extends JavaPlugin implements Listener {
     public void onEnable() {
         getServer().getPluginManager().registerEvents(this, this);
         this.saveDefaultConfig();
+//        int pluginId = REMOVED TO PROTECT ID;
+//        Metrics metrics = new Metrics(this, pluginId);
         Bukkit.getLogger().info("[AddHearts] Has Started.");
         new UpdateChecker(this, 100878).getLatestVerision(version -> {
-            if (this.getDescription().getVersion().equalsIgnoreCase(version)) {
+            Version latest = Version.parse(version);
+            Version current = Version.parse(this.getDescription().getVersion());
+            if (current.compareTo(latest) >= 0) {
                 getLogger().info("Plugin is up to date.");
             } else {
                 getLogger().warning("Plugin is not up to date.");
@@ -44,7 +49,9 @@ public class Main extends JavaPlugin implements Listener {
 
         if (player.isOp()) {
             new UpdateChecker(this, 100878).getLatestVerision(version -> {
-                if (this.getDescription().getVersion().equalsIgnoreCase(version)) {
+                Version latest = Version.parse(version);
+                Version current = Version.parse(this.getDescription().getVersion());
+                if (current.compareTo(latest) >= 0) {
                     player.sendMessage("[AddHearts] Plugin is up to date.");
                 } else {
                     player.sendMessage("[AddHearts] Plugin is not up to date.");
