@@ -28,5 +28,5 @@ addhearts.default<br>
 addhearts.setall<br>
 addhearts.reload
 
-##Link
+## Link
 https://www.spigotmc.org/resources/addhearts.100878/
