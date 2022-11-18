@@ -46,8 +46,8 @@ public class Main extends JavaPlugin implements Listener {
             getLogger().info("Created Basic Config File.");
         }
 
-//        int pluginId = ; // REMOVED TO PROTECT ID
-//        Metrics metrics = new Metrics(this, pluginId);
+        int pluginId = 14710;
+        Metrics metrics = new Metrics(this, pluginId);
         getLogger().info("Has Started.");
         new UpdateChecker(this, 100878).getLatestVerision(version -> {
             Version latest = Version.parse(version);
