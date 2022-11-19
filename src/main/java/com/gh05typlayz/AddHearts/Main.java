@@ -21,7 +21,7 @@ import java.util.List;
 import java.lang.Runtime.Version;
 
 public class Main extends JavaPlugin implements Listener {
-    FileConfiguration config = this.getCustomConfig();
+    public FileConfiguration config = this.getCustomConfig();
     private File customConfigFile;
     String help = "/addhearts help - This is the Help Command. (Shows all Commands)\n" +
             "/addhearts heal - Heals Yourself.\n" +
@@ -90,14 +90,15 @@ public class Main extends JavaPlugin implements Listener {
 
     public void heartReload(CommandSender sender) {
         if (getServer().getOnlinePlayers().size() > 0) {
-            Player[] players = (Player[]) getServer().getOnlinePlayers().toArray();
-            for (Player player : players) {
-                if (config.contains("players." + player.getUniqueId() + ".hearts")) {
-                    double newHealth = config.getDouble("players." + player.getUniqueId() + ".hearts");
-                    player.setMaxHealth(newHealth);
-                    player.sendMessage("[AddHearts] You Now Have " + newHealth + "hearts.");
+            Object[] players = getServer().getOnlinePlayers().toArray();
+            for (Object player : players) {
+                Player p = (Player) player;
+                if (config.contains("players." + p.getUniqueId() + ".hearts")) {
+                    double newHealth = config.getDouble("players." + p.getUniqueId() + ".hearts");
+                    p.setMaxHealth(newHealth);
+                    p.sendMessage("[AddHearts] You Now Have " + newHealth + " hearts.");
                 } else {
-                    config.set("players." + player.getUniqueId() + ".hearts", player.getMaxHealth());
+                    config.set("players." + p.getUniqueId() + ".hearts", p.getMaxHealth());
                     saveCustomConfig();
                 }
             }
@@ -129,6 +130,14 @@ public class Main extends JavaPlugin implements Listener {
         }
     }
 
+    public void logMessage(CommandSender sender, String s) {
+        if (sender instanceof Player) {
+            sender.sendMessage("[AddHearts] " + s);
+        } else {
+            getLogger().info(s);
+        }
+    }
+
     @EventHandler
     public void onPlayerJoin(PlayerJoinEvent e) {
         Player player = e.getPlayer();
@@ -149,12 +158,14 @@ public class Main extends JavaPlugin implements Listener {
             if (config.contains("players." + player.getUniqueId())) {
                 double maxHealth = player.getMaxHealth();
                 config.set("players." + player.getUniqueId() + ".hearts", maxHealth);
+                config.set("players." + player.getUniqueId() + ".displayName", player.getDisplayName());
                 saveCustomConfig();
             } else {
                 player.setMaxHealth(config.getDouble("players." + player.getUniqueId() + ".hearts"));
             }
         } else {
-            config.set("players." + player.getUniqueId() + ".hearts", config.get("defaultHealth"));
+            config.set("players." + player.getUniqueId() + ".hearts", config.getDouble("defaultHealth"));
+            config.set("players." + player.getUniqueId() + ".displayName", player.getDisplayName());
             saveCustomConfig();
             player.setMaxHealth(config.getDouble("defaultHealth"));
         }
@@ -178,6 +189,13 @@ public class Main extends JavaPlugin implements Listener {
                     reloadCustomConfig();
                     heartReload(sender);
                     getLogger().info("Success!.");
+                }
+            } else {
+                if (sender instanceof Player) {
+                    Player player = (Player) sender;
+                    player.performCommand("addhearts help");
+                } else {
+                    getServer().dispatchCommand(sender, "addhearts help");
                 }
             }
         }
@@ -217,21 +235,29 @@ public class Main extends JavaPlugin implements Listener {
                         double oldHealth = player.getHealth();
                         double addedHealth = Double.parseDouble(args[1]);
                         double newHealth = Double.sum(oldHealth, -addedHealth);
-                        config.set("players." + player.getUniqueId() + ".hearts", newHealth);
-                        saveCustomConfig();
-                        player.setMaxHealth(newHealth);
-                        player.sendMessage("[AddHearts] You now have " + newHealth + " hearts!");
+                        if (newHealth <= 0) {
+                            player.sendMessage("[AddHearts] Error: The Player Cannot Have Negative Hearts.");
+                        } else {
+                            config.set("players." + player.getUniqueId() + ".hearts", newHealth);
+                            saveCustomConfig();
+                            player.setMaxHealth(newHealth);
+                            player.sendMessage("[AddHearts] You now have " + newHealth + " hearts!");
+                        }
                     } else if (args.length == 3) {
                         Player p = Bukkit.getPlayer(args[2]);
                         if (p != null) {
                             double oldHealth = p.getMaxHealth();
                             double addedHealth = Double.parseDouble(args[1]);
                             double newHealth = Double.sum(oldHealth, -addedHealth);
-                            config.set("players." + p.getUniqueId() + ".hearts", newHealth);
-                            saveCustomConfig();
-                            p.setMaxHealth(newHealth);
-                            p.sendMessage("[AddHearts] You now have " + newHealth + " hearts!");
-                            player.sendMessage("[AddHearts] " + args[2] + " now has " + newHealth + " hearts!");
+                            if (newHealth <= 0) {
+                                player.sendMessage("[AddHearts] Error: The Player Cannot Have Negative Hearts.");
+                            } else {
+                                config.set("players." + p.getUniqueId() + ".hearts", newHealth);
+                                saveCustomConfig();
+                                p.setMaxHealth(newHealth);
+                                p.sendMessage("[AddHearts] You now have " + newHealth + " hearts!");
+                                player.sendMessage("[AddHearts] " + args[2] + " now has " + newHealth + " hearts!");
+                            }
                         } else {
                             player.sendMessage("[AddHearts] " + args[2] + " is Offline.");
                         }
@@ -268,16 +294,16 @@ public class Main extends JavaPlugin implements Listener {
                         player.setFireTicks(0);
                         player.sendMessage("[AddHearts] You have been healed!");
                     } else if (args.length == 2) {
-                        Player p = Bukkit.getPlayer(args[2]);
+                        Player p = Bukkit.getPlayer(args[1]);
                         if (p != null) {
                             p.setHealth(p.getMaxHealth());
                             p.setSaturation(20);
                             p.setFoodLevel(20);
                             p.setFireTicks(0);
                             p.sendMessage("[AddHearts] You have been healed!");
-                            player.sendMessage("[AddHearts] " + args[2] + " has been healed!");
+                            player.sendMessage("[AddHearts] " + args[1] + " has been healed!");
                         } else {
-                            player.sendMessage("[AddHearts] " + args[2] + " is Offline.");
+                            player.sendMessage("[AddHearts] " + args[1] + " is Offline.");
                         }
                     } else {
                         player.performCommand("addhearts help");
@@ -287,23 +313,25 @@ public class Main extends JavaPlugin implements Listener {
                         double defaultHealth = Double.parseDouble(args[1]);
                         config.set("defaultHealth", defaultHealth);
                         saveCustomConfig();
-                        getLogger().info("Default Health For New Players Has Been Set To " + defaultHealth + "!");
+                        player.sendMessage("[AddHearts] Default Health For New Players Has Been Set To " + defaultHealth + "!");
                     } else {
-                        getServer().dispatchCommand(sender, "addhearts help");
+                        player.performCommand("addhearts help");
                     }
                 } else if (args[0].equalsIgnoreCase("setall") && player.hasPermission("addhearts.setall")) {
                     if (args.length == 2) {
                         double setHealth = Double.parseDouble(args[1]);
                         if (getServer().getOnlinePlayers().size() > 0) {
-                            Player[] online = (Player[]) getServer().getOnlinePlayers().toArray();
-                            for (Player p : online) {
+                            Object[] online = getServer().getOnlinePlayers().toArray();
+                            for (Object pl : online) {
+                                Player p = (Player) pl;
                                 config.set("players." + p.getUniqueId() + ".hearts", setHealth);
                                 p.setMaxHealth(setHealth);
+                                p.sendMessage("[AddHearts] You now have " + setHealth + " hearts!");
                                 saveCustomConfig();
                             }
                         }
-                        if (getServer().getOnlinePlayers().size() > 0) {
-                            OfflinePlayer[] offline = (OfflinePlayer[]) getServer().getOnlinePlayers().toArray();
+                        if (getServer().getOfflinePlayers().length > 0) {
+                            OfflinePlayer[] offline = (OfflinePlayer[]) getServer().getOfflinePlayers();
                             for (OfflinePlayer p : offline) {
                                 config.set("players." + p.getUniqueId() + ".hearts", setHealth);
                                 saveCustomConfig();
@@ -311,7 +339,7 @@ public class Main extends JavaPlugin implements Listener {
                         }
                         player.sendMessage("[AddHearts] All Online and Offline Players Will Have " + args[1]);
                     } else {
-                        getServer().dispatchCommand(sender, "addhearts help");
+                        player.performCommand("addhearts help");
                     }
                 }
                 return true;
@@ -350,11 +378,15 @@ public class Main extends JavaPlugin implements Listener {
                                 double oldHealth = p.getMaxHealth();
                                 double addedHealth = Double.parseDouble(args[1]);
                                 double newHealth = Double.sum(oldHealth, -addedHealth);
-                                config.set("players." + p.getUniqueId() + ".hearts", newHealth);
-                                saveCustomConfig();
-                                p.setMaxHealth(newHealth);
-                                p.sendMessage("[AddHearts] You now have " + newHealth + " hearts!");
-                                getLogger().info(args[2] + " now has " + newHealth + " hearts!");
+                                if (newHealth <= 0) {
+                                    getLogger().info("Error: The Player Cannot Have Negative Hearts.");
+                                } else {
+                                    config.set("players." + p.getUniqueId() + ".hearts", newHealth);
+                                    saveCustomConfig();
+                                    p.setMaxHealth(newHealth);
+                                    p.sendMessage("[AddHearts] You now have " + newHealth + " hearts!");
+                                    getLogger().info(args[2] + " now has " + newHealth + " hearts!");
+                                }
                             } else {
                                 getLogger().warning(args[2] + " is Offline.");
                             }
@@ -385,19 +417,19 @@ public class Main extends JavaPlugin implements Listener {
                             getServer().dispatchCommand(sender, "addhearts help");
                         }
                     } else if (args[0].equalsIgnoreCase("heal")) {
-                        if (args.length == 2) {
+                        if (args.length == 1) {
                             getLogger().warning("You have to add a player's name.");
-                        } else if (args.length == 3) {
-                            Player p = Bukkit.getPlayer(args[2]);
+                        } else if (args.length == 2) {
+                            Player p = Bukkit.getPlayer(args[1]);
                             if (p != null) {
                                 p.setHealth(p.getMaxHealth());
                                 p.setSaturation(20);
                                 p.setFoodLevel(20);
                                 p.setFireTicks(0);
                                 p.sendMessage("[AddHearts] You have been healed!");
-                                getLogger().info(args[2] + " has been healed!");
+                                getLogger().info(args[1] + " has been healed!");
                             } else {
-                                getLogger().warning(args[2] + " is Offline.");
+                                getLogger().warning(args[1] + " is Offline.");
                             }
                         } else {
                             getServer().dispatchCommand(sender, "addhearts help");
@@ -415,15 +447,17 @@ public class Main extends JavaPlugin implements Listener {
                         if (args.length == 2) {
                             double setHealth = Double.parseDouble(args[1]);
                             if (getServer().getOnlinePlayers().size() > 0) {
-                                Player[] online = (Player[]) getServer().getOnlinePlayers().toArray();
-                                for (Player p : online) {
-                                    config.set("players." + p.getUniqueId() + ".hearts", setHealth);
-                                    p.setMaxHealth(setHealth);
+                                Object[] online = getServer().getOnlinePlayers().toArray();
+                                for (Object p : online) {
+                                    Player pl = (Player) p;
+                                    config.set("players." + pl.getUniqueId() + ".hearts", setHealth);
+                                    pl.setMaxHealth(setHealth);
+                                    pl.sendMessage("[AddHearts] You now have " + setHealth + " hearts!");
                                     saveCustomConfig();
                                 }
                             }
-                            if (getServer().getOnlinePlayers().size() > 0) {
-                                OfflinePlayer[] offline = (OfflinePlayer[]) getServer().getOnlinePlayers().toArray();
+                            if (getServer().getOfflinePlayers().length > 0) {
+                                OfflinePlayer[] offline = (OfflinePlayer[]) getServer().getOfflinePlayers();
 
                                 for (OfflinePlayer p : offline) {
                                     config.set("players." + p.getUniqueId() + ".hearts", setHealth);
