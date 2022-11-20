@@ -175,7 +175,7 @@ public class Main extends JavaPlugin implements Listener {
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
         if (args.length <= 0) {
             if (sender instanceof Player) {
-                Player p = )(Player) sender;
+                Player p = (Player) sender;
                 p.performCommand("addhearts help");
             } else {
                 getServer().dispatchCommand(sender, "addhearts help");
