@@ -173,6 +173,15 @@ public class Main extends JavaPlugin implements Listener {
 
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
+        if (args.length <= 0) {
+            if (sender instanceof Player) {
+                Player p = )(Player) sender;
+                p.performCommand("addhearts help");
+            } else {
+                getServer().dispatchCommand(sender, "addhearts help");
+            }
+            return true;
+        }
         if (command.getName().equalsIgnoreCase("addhearts") && args[0].equalsIgnoreCase("reload")) {
             if (args.length == 1) {
                 if (sender instanceof Player) {
@@ -198,6 +207,7 @@ public class Main extends JavaPlugin implements Listener {
                     getServer().dispatchCommand(sender, "addhearts help");
                 }
             }
+            return true;
         }
         if (sender instanceof Player) {
             Player player = (Player) sender;
